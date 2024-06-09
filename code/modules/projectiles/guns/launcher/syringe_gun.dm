@@ -11,6 +11,7 @@
 	force = 3
 	w_class = ITEM_SIZE_TINY
 	var/obj/item/reagent_containers/syringe/syringe
+	has_serial = FALSE
 
 /obj/item/syringe_cartridge/on_update_icon()
 	underlays.Cut()

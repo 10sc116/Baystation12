@@ -20,6 +20,11 @@
 	var/anchor_fall = FALSE
 	var/holographic = 0 //if the obj is a holographic object spawned by the holodeck
 
+	var/has_serial = FALSE // If true, the object gets a special serial number
+	var/type_serial
+	var/lathe_serial // The actual serial number
+	var/defaced_serial = FALSE //If true, the serial symbol will display as defaced
+
 /obj/Destroy()
 	STOP_PROCESSING(SSobj, src)
 	return ..()
@@ -298,6 +303,11 @@
 		to_chat(user, SPAN_SUBTLE("Can be rotated with alt-click."))
 	if((obj_flags & OBJ_FLAG_ANCHORABLE))
 		to_chat(user, SPAN_SUBTLE("Can be [anchored? "unsecured from the floor" : "secured to the floor"] using a wrench."))
+	if(has_serial)
+		if(defaced_serial)
+			to_chat(user, SPAN_WARNING("It had a set of unrecognizable symbols on it."))
+		else
+			to_chat(user, SPAN_NOTICE("It has a set of symbols on it, [serial()]."))
 
 /obj/proc/rotate(mob/user)
 	if(!CanPhysicallyInteract(user))
@@ -322,3 +332,45 @@
 
 /obj/get_mass()
 	return min(2**(w_class-1), 100)
+
+/**
+ * Generates or returns the serial number for the object.
+ * The lathe_serial generation here is a fallback for mapped objects. Produced objects will recieve lathe serials from their lathes.
+ */
+/obj/proc/serial()
+	if(!has_serial) //This is a last-ditch check if for some reason non-serialized things get serial() called.
+		return null
+	else
+		if(!(length(type_serial)))
+			type_serial = uppertext(copytext(md5(name), 1, 4))
+
+		if(!(length(lathe_serial)))
+			lathe_serial = uppertext(copytext(md5(ref(src)), length(ref(src)) - 4, length(ref(src))))
+
+		if(!(/obj/proc/deface in verbs))
+			verbs += /obj/proc/deface
+
+		return "[type_serial]-S[lathe_serial]"
+
+/obj/proc/deface()
+	set name = "Deface lathe number"
+	set desc = "Remove the unique symbols from \the [src]."
+	set category = "Object"
+	set src in view(1)
+
+
+	if(ishuman(usr))
+		var/mob/living/carbon/human/defacer = usr
+		var/obj/item/inhand = defacer.get_active_hand()
+
+		if(is_sharp(inhand) && do_after(defacer, 5 SECONDS, src))
+			usr.visible_message(
+				SPAN_WARNING("\The [defacer] carves something on \ the [src] with \the [inhand]."),
+				SPAN_ITALIC("You deface \the [src] with \the [inhand], making the lathe number unrecognizable.")
+			)
+
+		verbs -= /obj/proc/deface
+		defaced_serial = TRUE
+
+	else
+		to_chat(usr, SPAN_WARNING("You're unable to do that."))

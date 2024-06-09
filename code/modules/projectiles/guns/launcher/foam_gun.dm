@@ -18,7 +18,7 @@
 
 	var/max_darts = 1
 	var/list/darts = list()
-
+	has_serial = FALSE
 
 /obj/item/gun/launcher/foam/use_tool(obj/item/tool, mob/user, list/click_params)
 	// Foam Dart - Load ammo

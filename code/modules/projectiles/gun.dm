@@ -128,6 +128,8 @@
 	/// What skill level is needed in the gun's skill to completely negate the chance of an accident.
 	var/safety_skill = SKILL_EXPERIENCED
 
+	has_serial = TRUE
+
 /obj/item/gun/Initialize()
 	. = ..()
 	for(var/i in 1 to length(firemodes))
